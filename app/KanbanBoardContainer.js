@@ -18,8 +18,37 @@ class KanbanBoardContainer extends Component {
   }
 
   addTask(cardId, taskName){
+    // Find the index of the card
+    let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
 
+    // Create a new task with the given and temp ID
+    let newTask = {id:Date.now(), name:taskName, done:false};
+
+    // Create a new object and push the new task into the array of tasks
+    let nextState = update(this.state.cards, {
+                            [cardIndex]: {
+                              tasks: {$push: [newTask }
+                            }
+                          });
+
+    // Set the component state to the mutated object
+    this.setState({cards:nextState});
+
+    // Call the API to add the task on the server
+    fetch(`${API_URL}/cards/${cardId}/tasks/${taskId}`, {
+      method: 'post',
+      headers: API_HEADERS,
+      body: JSON.stringify(newTask)
+    })
+    .then((response) => response.json())
+    .then((responseData) => {
+      // When the server returns the definitive ID
+      // used for the new Task on the server, update it on React
+      newTask.id=responseData.id
+      this.setState({cards:nextState});
+    });
   }
+
   deleteTask(cardId, taskId, taskIndex){
     // Find the index of the card
     let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
@@ -39,6 +68,7 @@ class KanbanBoardContainer extends Component {
       headers: API_HEADERS
     });
   }
+
   toggleTask(cardId, taskId, taskIndex){
      // Find the index of the card
     let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
