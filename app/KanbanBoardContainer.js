@@ -27,7 +27,7 @@ class KanbanBoardContainer extends Component {
     // Create a new object and push the new task into the array of tasks
     let nextState = update(this.state.cards, {
                             [cardIndex]: {
-                              tasks: {$push: [newTask }
+                              tasks: {$push: [newTask] }
                             }
                           });
 
@@ -77,7 +77,7 @@ class KanbanBoardContainer extends Component {
     let newDoneValue;
 
     // Using $apply command, you will change the done value to its opposite
-    let nextState = update(this.state.cards. {
+    let nextState = update(this.state.cards, {
                             [cardIndex]: {
                               tasks: {
                                 [taskIndex]: {
