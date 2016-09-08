@@ -1,7 +1,7 @@
 {
-  "name": "react-app-boilerplate",
+  "name": "Simple React App",
   "version": "1.0.0",
-  "description": "React application boilerplate",
+  "description": "Simple React App",
   "author": "Aaron Phillips",
   "scripts": {
     "start": "node_modules/.bin/webpack-dev-server --progress"
