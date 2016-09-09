@@ -1,1 +1,10 @@
-/node_modules
+# Logs
+logs
+*.log
+
+
+node_modules
+
+
+# OS specific
+.DS_Store

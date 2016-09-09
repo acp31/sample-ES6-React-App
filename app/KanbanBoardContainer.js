@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import KanbanBoard from './KanbanBoard';
+import update from 'react-addons-update';
 import 'whatwg-fetch';
 import 'babel-polyfill';
 
@@ -13,10 +14,9 @@ class KanbanBoardContainer extends Component {
   constructor(){
     super(...arguments);
     this.state = {
-      cards: [],
+      cards:[],
     };
   }
-
   componentDidMount(){
     fetch(API_URL+'/cards', {headers: API_HEADERS})
     .then((response) => response.json())
@@ -24,33 +24,29 @@ class KanbanBoardContainer extends Component {
       this.setState({cards: responseData});
     })
     .catch((error) => {
-      console.log('Error fetching and parsing data', error)
+      console.log('Error fetching and parsing data', error);
     });
   }
 
+
   addTask(cardId, taskName){
     // Keep a reference to the original state prior to the mutations
-    // in case you need to revert the optimistic changes in the UI
+    // in case we need to revert the optimistic changes in the UI
     let prevState = this.state;
-
     // Find the index of the card
     let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
-
-    // Create a new task with the given and temp ID
+    // Create a new task with the given name and a temporary ID
     let newTask = {id:Date.now(), name:taskName, done:false};
-
-    // Create a new object and push the new task into the array of tasks
+    // Create a new object and push the new task to the array of tasks
     let nextState = update(this.state.cards, {
-                            [cardIndex]: {
-                              tasks: {$push: [newTask] }
-                            }
-                          });
-
-    // Set the component state to the mutated object
+      [cardIndex]: {
+        tasks: {$push: [newTask] }
+      }
+    });
+    // set the component state to the mutated object
     this.setState({cards:nextState});
-
     // Call the API to add the task on the server
-    fetch(`${API_URL}/cards/${cardId}/tasks/${taskId}`, {
+    fetch(`${API_URL}/cards/${cardId}/tasks`, {
       method: 'post',
       headers: API_HEADERS,
       body: JSON.stringify(newTask)
@@ -59,8 +55,8 @@ class KanbanBoardContainer extends Component {
       if(response.ok){
         return response.json()
       } else {
-        // Throw an error if server response wasn't 'ok' 
-        // so you can revert back the optimistic changes 
+        // Throw an error if server response wasn't 'ok'
+        // so we can revert back the optimistic changes
         // made to the UI.
         throw new Error("Server response wasn't OK")
       }
@@ -77,22 +73,19 @@ class KanbanBoardContainer extends Component {
   }
 
   deleteTask(cardId, taskId, taskIndex){
+    // Keep a reference to the original state prior to the mutations
+    // in case we need to revert the optimistic changes in the UI
+    let prevState = this.state;
     // Find the index of the card
     let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
-
-    // Keep a reference to the original state prior to the mutations
-    // in case you need to revert the optimistic changes in the UI
-    let prevState = this.state;
-
     // Create a new object without the task
     let nextState = update(this.state.cards, {
-                            [cardIndex]: {
-                              tasks: {$splice: [[taskIndex,1]] }
-                            }
-                          });
-    // Set the state of the mutated object
+      [cardIndex]: {
+        tasks: {$splice: [[taskIndex,1]] }
+      }
+    });
+    // set the component state to the mutated object
     this.setState({cards:nextState});
-
     // Call the API to remove the task on the server
     fetch(`${API_URL}/cards/${cardId}/tasks/${taskId}`, {
       method: 'delete',
@@ -100,10 +93,8 @@ class KanbanBoardContainer extends Component {
     })
     .then((response) => {
       if(!response.ok){
-        return response.json()
-      } else {
-        // Throw an error if server response wasn't 'ok' 
-        // so you can revert back the optimistic changes 
+        // Throw an error if server response wasn't 'ok'
+        // so we can revert back the optimistic changes
         // made to the UI.
         throw new Error("Server response wasn't OK")
       }
@@ -116,33 +107,29 @@ class KanbanBoardContainer extends Component {
 
   toggleTask(cardId, taskId, taskIndex){
     // Keep a reference to the original state prior to the mutations
-    // in case you need to revert the optimistic changes in the UI
+    // in case we need to revert the optimistic changes in the UI
     let prevState = this.state;
-
-     // Find the index of the card
+    // Find the index of the card
     let cardIndex = this.state.cards.findIndex((card)=>card.id == cardId);
-
-    // Save reference to the task's 'done' value
+    // Save a reference to the task's 'done' value
     let newDoneValue;
-
-    // Using $apply command, you will change the done value to its opposite
-    let nextState = update(this.state.cards, {
-                            [cardIndex]: {
-                              tasks: {
-                                [taskIndex]: {
-                                  done: { $apply: (done) => {
-                                    newDoneValue = !done;
-                                    return newDoneValue;
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        });
-
-    // Set the component state to the mutated object
+    // Using the $apply command, we will change the done value to its opposite
+    let nextState = update(
+      this.state.cards, {
+        [cardIndex]: {
+          tasks: {
+            [taskIndex]: {
+              done: { $apply: (done) => {
+                newDoneValue = !done
+                return newDoneValue;
+              }
+            }
+          }
+        }
+      }
+    });
+    // set the component state to the mutated object
     this.setState({cards:nextState});
-
     // Call the API to toggle the task on the server
     fetch(`${API_URL}/cards/${cardId}/tasks/${taskId}`, {
       method: 'put',
@@ -151,10 +138,8 @@ class KanbanBoardContainer extends Component {
     })
     .then((response) => {
       if(!response.ok){
-        return response.json()
-      } else {
-        // Throw an error if server response wasn't 'ok' 
-        // so you can revert back the optimistic changes 
+        // Throw an error if server response wasn't 'ok'
+        // so we can revert back the optimistic changes
         // made to the UI.
         throw new Error("Server response wasn't OK")
       }
@@ -165,15 +150,13 @@ class KanbanBoardContainer extends Component {
     });
   }
 
-  
-  render() {
-    return (
-      <KanbanBoard cards={this.state.cards} taskCallbacks={{
-                          toggle: this.toggleTask.bind(this),
-                          delete: this.deleteTask.bind(this),
-                             add: this.addTask.bind(this) }} />
+  render() { return (
+    <KanbanBoard cards={this.state.cards}
+    taskCallbacks={{
+      toggle: this.toggleTask.bind(this),
+      delete: this.deleteTask.bind(this),
+      add: this.addTask.bind(this) }} />
     )
   }
 }
-
 export default KanbanBoardContainer;
